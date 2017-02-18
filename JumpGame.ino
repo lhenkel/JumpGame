@@ -16,7 +16,9 @@ Adafruit_7segment matrix = Adafruit_7segment();
 
 // Which pin on the Arduino is connected to the NeoPixels?
 // On a Trinket or Gemma we suggest changing this to 1
-#define PIN            7
+#define NEOPIXEL_PIN            7
+#define RESET_BTN_PIN            6
+#define PRESSURE_MAT_SWITCH_PIN            7
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS      90
@@ -24,7 +26,7 @@ Adafruit_7segment matrix = Adafruit_7segment();
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 int delayval = 20; // delay for half a second
 int q = 40;
@@ -40,8 +42,13 @@ int greenDir = 1;
 int blueDir = 1;
 
 int curScore = 0;
-
+boolean gameRunning = false;
+int btnVal = 0;     // variable for reading the pin status
 void setup() {
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(RESET_BTN_PIN, INPUT);    // declare pushbutton as input
+  
   // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
 #if defined (__AVR_ATtiny85__)
   if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
@@ -59,6 +66,17 @@ void setup() {
 }
 
 void loop() {
+
+  if (gameRunning == false) {
+    btnVal = digitalRead(RESET_BTN_PIN);  // read input value
+    if (btnVal == HIGH) {         // check if the input is HIGH (button released)
+      digitalWrite(LED_BUILTIN, LOW);  // turn LED OFF 
+      gameRunning = true;    
+    } else {
+      digitalWrite(LED_BUILTIN, HIGH);  // turn LED ON
+    }    
+    return;
+  }
 
   if (curScore > 99) {
 
