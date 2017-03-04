@@ -17,9 +17,10 @@ Adafruit_7segment matrix = Adafruit_7segment();
 // Which pin on the Arduino is connected to the NeoPixels?
 // On a Trinket or Gemma we suggest changing this to 1
 #define NEOPIXEL_PIN            7
-#define RESET_BTN_PIN            6
-#define PRESSURE_MAT_SWITCH_PIN            7
+#define RESET_BTN_PIN            3
+#define PRESSURE_MAT_SWITCH_PIN            2
 
+#define INITIAL_DELAY_VALUE       30
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS      90
 
@@ -28,7 +29,8 @@ Adafruit_7segment matrix = Adafruit_7segment();
 // example for more information on possible values.
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-int delayval = 20; // delay for half a second
+
+int delayval = INITIAL_DELAY_VALUE; // delay for half a second
 int q = 40;
 int previousPixel = 42;
 int blueVal = 5;
@@ -43,12 +45,18 @@ int blueDir = 1;
 
 int curScore = 0;
 boolean gameRunning = false;
+boolean jumpedAtLeastOnce = false;
+boolean onMatCurrently = false;
+boolean currentlyJumping = false;
+
 int btnVal = 0;     // variable for reading the pin status
+int matVal = 0;     // variable for reading the pin status
+
 void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(RESET_BTN_PIN, INPUT);    // declare pushbutton as input
-  
+
+  pinMode(RESET_BTN_PIN, INPUT_PULLUP);    // declare pushbutton as input
   // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
 #if defined (__AVR_ATtiny85__)
   if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
@@ -69,9 +77,11 @@ void loop() {
 
   if (gameRunning == false) {
     btnVal = digitalRead(RESET_BTN_PIN);  // read input value
-    if (btnVal == HIGH) {         // check if the input is HIGH (button released)
+    if (btnVal == LOW) {         // check if the input is HIGH (button released)
       digitalWrite(LED_BUILTIN, LOW);  // turn LED OFF 
-      gameRunning = true;    
+      gameRunning = true;   
+      delayval =  INITIAL_DELAY_VALUE; 
+      curScore = 1;
     } else {
       digitalWrite(LED_BUILTIN, HIGH);  // turn LED ON
     }    
@@ -94,8 +104,9 @@ void loop() {
   } else {
     curScore = curScore + 1;  
   }
+
   
-  
+   
   // For a set of NeoPixels the first NeoPixel is 0, second is 1, all the way up to the count of pixels minus one.
   if ( delayval > 2 ) {
     delayval = delayval - 1;  
@@ -143,14 +154,40 @@ void loop() {
   
   for(int i=0;i<NUMPIXELS;i=i+1){
 
-    
+  
+    matVal = digitalRead(PRESSURE_MAT_SWITCH_PIN);  // read input value
+    Serial.println('Here ');
+    Serial.println(matVal);
+    if (matVal == HIGH) {         // check if the input is HIGH (button pressed)
+      digitalWrite(LED_BUILTIN, HIGH);  // turn LED ON
+      onMatCurrently = true;
+      Serial.println("Matt Pressed!");
+    } else {
+      digitalWrite(LED_BUILTIN, LOW);  // turn LED OFF 
+      if (onMatCurrently == true) {
+        jumpedAtLeastOnce = true;
+        Serial.println("On Mat jumped once!");
+      }
+      onMatCurrently = false;
+      
+      
+    } 
+      
     if (i == 0) {
       previousPixel = NUMPIXELS - 1;
     } else {
       previousPixel = i-1;
     }
 
-    
+    if (i == 45) {
+
+      if ((onMatCurrently == true) || (jumpedAtLeastOnce == false)) {
+          gameRunning = false;
+      } else {
+        jumpedAtLeastOnce = false;
+      }
+      
+    }
     
     pixels.setPixelColor(previousPixel, pixels.Color(0, 0 , 0 )); // Blank the one behind
     
