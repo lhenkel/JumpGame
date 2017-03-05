@@ -17,7 +17,7 @@ Adafruit_7segment matrix = Adafruit_7segment();
 // Which pin on the Arduino is connected to the NeoPixels?
 // On a Trinket or Gemma we suggest changing this to 1
 #define NEOPIXEL_PIN            7
-#define RESET_BTN_PIN            3
+#define RESET_BTN_PIN            4
 #define PRESSURE_MAT_SWITCH_PIN            2
 
 #define INITIAL_DELAY_VALUE       30
